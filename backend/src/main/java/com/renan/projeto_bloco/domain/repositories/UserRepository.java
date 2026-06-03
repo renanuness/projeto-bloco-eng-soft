@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface UserRepository {
     
     boolean existsByEmail(@NotBlank(message = "Email é obrigatório") @Email(message = "Email inválido") String email);
-    Optional<User> findByEmal(String email);
+    Optional<User> findByEmail(String email);
+    Optional<User> findById(Long id);
+
     User save(User usuario);
 }

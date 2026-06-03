@@ -39,7 +39,7 @@ public class UserService {
     }
 
     public User login(@Valid UserLoginDTO dto) throws DomainException {
-        User user = usuarioRepository.findByEmal(dto.email()).orElseThrow(()->new DomainException("Login inválido"));
+        User user = usuarioRepository.findByEmail(dto.email()).orElseThrow(()->new DomainException("Login inválido"));
 
         if(user.getPassword() == dto.password()) {
             return user;
