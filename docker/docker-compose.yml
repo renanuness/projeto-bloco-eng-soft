@@ -1,23 +1,72 @@
+# docker/docker-compose.yml
+version: '3.8'
+
 services:
-
-  db:
-    image: postgres
-    restart: always
-    # set shared memory limit when using docker compose
-    shm_size: 128mb
-    # or set shared memory limit when deploy via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
+  # Banco de dados
+  postgres:
+    image: postgres:16-alpine
+    container_name: table-tennis-db
     environment:
-      POSTGRES_PASSWORD: myPassword@1234
-      POSTGRES_USER: pb_user
-      POSTGRES_DB: pb_database
-
-  adminer:
-    image: adminer
-    restart: always
+      POSTGRES_DB: ${DB_NAME:-table_tennis_db}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
     ports:
-      - 12300:8080
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tenis-mesa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d table_tennis_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Spring Boot
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: tenis-mesa-api
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-table_tennis_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-admin123}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+    ports:
+      - "9191:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tenis-mesa-network
+    volumes:
+      - ../backend:/app
+      - ~/.m2:/root/.m2  # Cache Maven
+
+  # Frontend React
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-development}
+    container_name: tenis-mesa-web
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - tenis-mesa-network
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    command: ${FRONTEND_COMMAND:-npm run dev}
+
+networks:
+  tenis-mesa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

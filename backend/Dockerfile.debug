@@ -1,0 +1,49 @@
+# backend/Dockerfile.debug
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+
+WORKDIR /build
+
+# Copiar pom.xml
+COPY pom.xml .
+
+# Baixar dependências
+RUN mvn dependency:go-offline -B
+
+# Copiar código fonte
+COPY src ./src
+
+# Compilar
+RUN mvn clean package -DskipTests
+
+# Mostrar o que foi gerado (DEBUG)
+RUN echo "=== Conteúdo do target ===" && \
+    ls -la /build/target/ && \
+    echo "=== JARs encontrados ===" && \
+    find /build/target -name "*.jar" -type f
+
+# Estágio de debug
+FROM eclipse-temurin:21-jre-alpine AS debug
+
+WORKDIR /app
+
+# Copiar com debug
+COPY --from=builder /build/target/ ./target/
+
+# Mostrar o que foi copiado
+RUN echo "=== Conteúdo do /app ===" && \
+    ls -la /app/ && \
+    echo "=== Conteúdo do /app/target ===" && \
+    ls -la /app/target/ && \
+    echo "=== Procurando JARs ===" && \
+    find /app -name "*.jar" -type f
+
+# Tentar copiar o JAR específico
+RUN if [ -f /app/target/*.jar ]; then \
+        cp /app/target/*.jar /app/app.jar && \
+        echo "JAR copiado com sucesso"; \
+    else \
+        echo "ERRO: Nenhum JAR encontrado!" && \
+        exit 1; \
+    fi
+
+CMD ["java", "-jar", "app.jar"]

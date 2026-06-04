@@ -76,6 +76,10 @@ public class TournamentService {
     }
 
     public List<TournamentResponseDTO> findAll() {
-        return tournamentRepository.findAll();
+        List<Tournament> tournaments = tournamentRepository.findAll();
+
+        return tournaments.stream()
+                .map(TournamentResponseDTO::from)
+                .toList();
     }
 }
