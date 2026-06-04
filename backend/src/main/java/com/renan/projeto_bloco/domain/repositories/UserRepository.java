@@ -4,6 +4,7 @@ import com.renan.projeto_bloco.domain.models.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -13,4 +14,6 @@ public interface UserRepository {
     Optional<User> findById(Long id);
 
     User save(User usuario);
+
+    List<User> listAll();
 }

@@ -5,6 +5,7 @@ import com.renan.projeto_bloco.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,5 +31,10 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User save(User usuario) {
         return jpaRepository.save(usuario);
+    }
+
+    @Override
+    public List<User> listAll() {
+        return jpaRepository.findAll();
     }
 }

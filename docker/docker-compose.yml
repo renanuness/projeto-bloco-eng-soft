@@ -1,11 +1,8 @@
-# docker/docker-compose.yml
-version: '3.8'
-
 services:
   # Banco de dados
   postgres:
     image: postgres:16-alpine
-    container_name: table-tennis-db
+    container_name: tenis-mesa-db
     environment:
       POSTGRES_DB: ${DB_NAME:-table_tennis_db}
       POSTGRES_USER: ${DB_USER:-admin}
@@ -15,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - tenis-mesa-network
+      - network-tenis-mesa
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d table_tennis_db"]
       interval: 10s
@@ -28,8 +25,10 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     container_name: tenis-mesa-api
+    stdin_open: true
+    tty: true
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-table_tennis_db}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tenis-mesa-db:5432/${DB_NAME:-table_tennis_db}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-admin}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-admin123}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -39,7 +38,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - tenis-mesa-network
+      - network-tenis-mesa
     volumes:
       - ../backend:/app
       - ~/.m2:/root/.m2  # Cache Maven
@@ -58,15 +57,19 @@ services:
     depends_on:
       - backend
     networks:
-      - tenis-mesa-network
+      - network-tenis-mesa
     volumes:
       - ../frontend:/app
       - /app/node_modules
     command: ${FRONTEND_COMMAND:-npm run dev}
 
 networks:
-  tenis-mesa-network:
+  network-tenis-mesa:
     driver: bridge
 
 volumes:
   postgres_data:
+
+
+
+  #java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar

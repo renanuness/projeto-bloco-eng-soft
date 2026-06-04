@@ -9,23 +9,28 @@ import com.renan.projeto_bloco.domain.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
-@RequestMapping("users/")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> listAll(){
+        var users = userService.listAll();
+
+        return ResponseEntity.ok(users.stream().map(u -> UserResponseDTO.fromDomain(u)).toList());
+    }
+
     // cadastrar
     @PostMapping
-    public ResponseEntity<UserResponseDTO> cadastrar(@Valid @RequestBody UserRequestDTO dto) {
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO dto) {
         try {
             User user = userService.cadastrar(dto);
             UserResponseDTO response = UserResponseDTO.fromDomain(user);

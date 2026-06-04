@@ -5,16 +5,20 @@ import com.renan.projeto_bloco.application.dto.UserRequestDTO;
 import com.renan.projeto_bloco.domain.exceptions.DomainException;
 import com.renan.projeto_bloco.domain.models.User;
 import com.renan.projeto_bloco.domain.repositories.UserRepository;
+import com.renan.projeto_bloco.infrastructure.persintence.UserRepositoryJpa;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository usuarioRepository;
+    private final UserRepositoryJpa userRepositoryJpa;
 
 
     //private final PasswordEncoder passwordEncoder;
@@ -46,5 +50,11 @@ public class UserService {
         }
 
         throw new DomainException("Login inválido");
+    }
+
+    public List<User> listAll() {
+        var users = usuarioRepository.listAll();
+
+        return users;
     }
 }
